@@ -528,21 +528,6 @@
             z-index: 20;
         }
         
-        /* 全屏按钮 */
-        #fullscreenBtn {
-            position: absolute;
-            top: 15px;
-            right: 65px;
-            background: rgba(139, 92, 246, 0.9);
-            border: 2px solid #fff;
-            border-radius: 10px;
-            padding: 10px 12px;
-            color: #fff;
-            font-size: 18px;
-            cursor: pointer;
-            z-index: 30;
-        }
-        
         /* 难度特效增强 */
         .difficulty-effect-easy .arrow {
             animation: none;
@@ -693,10 +678,13 @@
                     <span class="heart">❤️</span>
                 </div>
             </div>
+            <div class="infoBox" style="cursor:pointer;" onclick="toggleFullscreen()">
+                <div class="label">FULL</div>
+                <div class="value" style="font-size:12px;">⛶</div>
+            </div>
         </div>
         
         <button id="soundToggle" onclick="toggleSound()">🔊</button>
-        <button id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
         <button id="pauseBtn" onclick="pauseGame()">⏸️</button>
         
         <div id="gameArea">
