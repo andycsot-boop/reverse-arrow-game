@@ -529,19 +529,9 @@
         }
         
         /* 全屏按钮 */
-        #fullscreenBtn {
-            position: absolute;
-            top: 60px;
-            right: 15px;
-            background: linear-gradient(145deg, #ff6b35, #e55a2b);
-            border: 3px solid #fff;
-            border-radius: 10px;
-            padding: 12px;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 25;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        .controlBtn.fullscreen {
+            background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+            font-size: 24px;
         }
         
         /* 难度特效增强 */
@@ -697,7 +687,6 @@
         </div>
         
         <button id="soundToggle" onclick="toggleSound()">🔊</button>
-        <button id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
         <button id="pauseBtn" onclick="pauseGame()">⏸️</button>
         
         <div id="gameArea">
@@ -718,7 +707,7 @@
             <div id="controls">
                 <div></div>
                 <div class="controlBtn" data-dir="up" onclick="handleInput('up')">⬆️</div>
-                <div></div>
+                <div class="controlBtn fullscreen" onclick="toggleFullscreen()">⛶</div>
                 <div class="controlBtn" data-dir="left" onclick="handleInput('left')">⬅️</div>
                 <div class="controlBtn" data-dir="down" onclick="handleInput('down')">⬇️</div>
                 <div class="controlBtn" data-dir="right" onclick="handleInput('right')">➡️</div>
