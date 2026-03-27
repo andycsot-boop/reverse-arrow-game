@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>反向箭头 - Reverse Arrow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(180deg, #5c94fc 0%, #5c94fc 70%, #00a800 70%, #00a800 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 云朵装饰 */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.9;
+            animation: float 20s infinite linear;
+        }
+        
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .cloud1 {
+            width: 80px;
+            height: 30px;
+            top: 10%;
+            left: -100px;
+        }
+        
+        .cloud1::before {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            left: 10px;
+        }
+        
+        .cloud1::after {
+            width: 50px;
+            height: 35px;
+            top: -15px;
+            right: 10px;
+        }
+        
+        .cloud2 {
+            width: 60px;
+            height: 25px;
+            top: 20%;
+            left: -80px;
+            animation-delay: -10s;
+        }
+        
+        .cloud2::before {
+            width: 35px;
+            height: 35px;
+            top: -18px;
+            left: 8px;
+        }
+        
+        .cloud2::after {
+            width: 40px;
+            height: 30px;
+            top: -12px;
+            right: 8px;
+        }
+        
+        @keyframes float {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(100vw + 150px)); }
+        }
+        
+        /* 游戏容器 */
+        #gameContainer {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* 顶部信息栏 */
+        #topBar {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 4px solid #000;
+        }
+        
+        .infoBox {
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            font-size: 10px;
+        }
+        
+        .infoBox .label {
+            font-size: 8px;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+        
+        .infoBox .value {
+            font-size: 14px;
+            color: #ffd700;
+        }
+        
+        /* 游戏区域 */
+        #gameArea {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        /* 箭头显示区域 */
+        #arrowDisplay {
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a5a);
+            border: 6px solid #fff;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 10px 0 #c44444,
+                0 15px 20px rgba(0,0,0,0.3);
+            position: relative;
+            transition: transform 0.1s;
+        }
+        
+        #arrowDisplay.correct {
+            background: linear-gradient(145deg, #4ade80, #22c55e);
+            box-shadow: 
+                0 10px 0 #16a34a,
+                0 15px 20px rgba(0,0,0,0.3);
+            animation: correctPulse 0.3s ease;
+        }
+        
+        #arrowDisplay.wrong {
+            background: linear-gradient(145deg, #6b7280, #4b5563);
+            box-shadow: 
+                0 10px 0 #374151,
+                0 15px 20px rgba(0,0,0,0.3);
+            animation: shake 0.4s ease;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .arrow {
+            font-size: 100px;
+            color: #fff;
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        
+        /* 提示文字 */
+        #hint {
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            font-size: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.8;
+        }
+        
+        #hint .highlight {
+            color: #ffd700;
+        }
+        
+        /* 进度条 */
+        #progressBar {
+            width: 100%;
+            max-width: 300px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 3px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        #progressFill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        
+        /* 控制按钮区域 */
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .controlBtn {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #ff6b35, #e55a2b);
+            border: 4px solid #fff;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 0 #c44444,
+                0 12px 15px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            user-select: none;
+        }
+        
+        .controlBtn:active {
+            transform: translateY(8px);
+            box-shadow: 
+                0 0 0 #c44444,
+                0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .controlBtn.correct {
+            background: linear-gradient(145deg, #4ade80, #22c55e);
+            box-shadow: 
+                0 8px 0 #16a34a,
+                0 12px 15px rgba(0,0,0,0.3);
+        }
+        
+        .controlBtn.wrong {
+            background: linear-gradient(145deg, #6b7280, #4b5563);
+            box-shadow: 
+                0 8px 0 #374151,
+                0 12px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* 开始/结束界面 */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        
+        .screen.hidden {
+            display: none;
+        }
+        
+        .screen h1 {
+            color: #ffd700;
+            font-size: 28px;
+            text-shadow: 
+                4px 4px 0 #ff6b35,
+                -2px -2px 0 #fff;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        .screen h2 {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.8;
+        }
+        
+        .btn {
+            background: linear-gradient(145deg, #4ade80, #22c55e);
+            border: 4px solid #fff;
+            border-radius: 15px;
+            padding: 20px 40px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 0 #16a34a,
+                0 12px 20px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+        
+        .btn:active {
+            transform: translateY(8px);
+            box-shadow: 
+                0 0 0 #16a34a,
+                0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(145deg, #60a5fa, #3b82f6);
+            box-shadow: 
+                0 8px 0 #2563eb,
+                0 12px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn.secondary:active {
+            box-shadow: 
+                0 0 0 #2563eb,
+                0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        /* 分数显示 */
+        .scoreDisplay {
+            color: #fff;
+            font-size: 24px;
+            margin: 20px 0;
+            text-shadow: 3px 3px 0 #000;
+        }
+        
+        .scoreDisplay .number {
+            color: #ffd700;
+            font-size: 36px;
+        }
+        
+        /* 排行榜 */
+        #leaderboard {
+            background: rgba(255,255,255,0.1);
+            border: 3px solid #fff;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 350px;
+        }
+        
+        #leaderboard h3 {
+            color: #ffd700;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .leaderboardItem {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            color: #fff;
+            font-size: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .leaderboardItem:last-child {
+            border-bottom: none;
+        }
+        
+        .leaderboardItem .rank {
+            color: #ffd700;
+            width: 30px;
+        }
+        
+        .leaderboardItem .name {
+            flex: 1;
+            text-align: left;
+            padding-left: 10px;
+        }
+        
+        .leaderboardItem .score {
+            color: #4ade80;
+        }
+        
+        /* 连击显示 */
+        #combo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 
+                3px 3px 0 #ff6b35,
+                -2px -2px 0 #fff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        #combo.show {
+            animation: comboAnim 0.8s ease forwards;
+        }
+        
+        @keyframes comboAnim {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -100%) scale(1);
+            }
+        }
+        
+        /* 粒子效果 */
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        /* 生命 hearts */
+        #lives {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .heart {
+            font-size: 16px;
+        }
+        
+        /* 暂停按钮 */
+        #pauseBtn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            padding: 10px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 20;
+        }
+        
+        /* 难度选择 */
+        .difficultySelect {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .difficultyBtn {
+            padding: 15px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .difficultyBtn.easy {
+            background: #4ade80;
+            color: #fff;
+        }
+        
+        .difficultyBtn.medium {
+            background: #fbbf24;
+            color: #000;
+        }
+        
+        .difficultyBtn.hard {
+            background: #ef4444;
+            color: #fff;
+        }
+        
+        .difficultyBtn.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+        
+        /* 音效开关 */
+        #soundToggle {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            padding: 10px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 20;
+        }
+        
+        /* 全屏按钮 */
+        #fullscreenBtn {
+            position: absolute;
+            top: 15px;
+            left: 70px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            padding: 10px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 20;
+            display: none;
+        }
+        
+        body.fullscreen #fullscreenBtn {
+            display: inline-block;
+        }
+        
+        /* 难度特效增强 */
+        .difficulty-effect-easy .arrow {
+            animation: none;
+        }
+        
+        .difficulty-effect-medium .arrow {
+            animation: arrowPulse 0.5s ease-in-out;
+        }
+        
+        .difficulty-effect-hard .arrow {
+            animation: arrowPulseHard 0.3s ease-in-out;
+        }
+        
+        @keyframes arrowPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.15) rotate(5deg); }
+        }
+        
+        @keyframes arrowPulseHard {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-8deg); }
+            50% { transform: scale(1.3) rotate(8deg); }
+            75% { transform: scale(1.2) rotate(-8deg); }
+        }
+        
+        /* 按钮特效随难度变化 */
+        .btn-effect-medium.controlBtn.correct {
+            animation: btnGlowMedium 0.3s ease;
+        }
+        
+        .btn-effect-hard.controlBtn.correct {
+            animation: btnGlowHard 0.3s ease;
+        }
+        
+        @keyframes btnGlowMedium {
+            0% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 15px rgba(74, 222, 128, 0.5); }
+            50% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 30px rgba(74, 222, 128, 0.8); }
+            100% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 15px rgba(74, 222, 128, 0.5); }
+        }
+        
+        @keyframes btnGlowHard {
+            0% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 20px rgba(236, 72, 153, 0.5); }
+            25% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 40px rgba(236, 72, 153, 1); }
+            50% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 60px rgba(236, 72, 153, 0.8); }
+            75% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 40px rgba(236, 72, 153, 0.5); }
+            100% { box-shadow: 0 8px 0 #16a34a, 0 12px 15px rgba(0,0,0,0.3), 0 0 20px rgba(236, 72, 153, 0.3); }
+        }
+        
+        /* 背景音乐可视化 */
+        .music-visualizer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #ffd700, #ff6b35, #4ade80);
+            opacity: 0.6;
+            z-index: 5;
+            animation: musicBounce 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes musicBounce {
+            0%, 100% { height: 5px; }
+            50% { height: 10px; }
+        }
+        
+        /* 响应式调整 */
+        @media (max-height: 700px) {
+            #arrowDisplay {
+                width: 140px;
+                height: 140px;
+            }
+            .arrow {
+                font-size: 70px;
+            }
+            .controlBtn {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 云朵装饰 -->
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    
+    <!-- 游戏容器 -->
+    <div id="gameContainer">
+        <!-- 开始界面 -->
+        <div id="startScreen" class="screen">
+            <h1>⬅️ REVERSE<br>ARROW ➡️</h1>
+            <h2>看到箭头按反方向！<br>考验你的反应速度</h2>
+            
+            <div class="difficultySelect">
+                <button class="difficultyBtn easy selected" data-diff="easy">简单</button>
+                <button class="difficultyBtn medium" data-diff="medium">中等</button>
+                <button class="difficultyBtn hard" data-diff="hard">困难</button>
+            </div>
+            
+            <button class="btn" onclick="startGame()">开始游戏</button>
+            
+            <div id="leaderboard">
+                <h3>🏆 排行榜</h3>
+                <div id="leaderboardList"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏结束界面 -->
+        <div id="gameOverScreen" class="screen hidden">
+            <h1>GAME OVER</h1>
+            <div class="scoreDisplay">
+                最终得分<br>
+                <span class="number" id="finalScore">0</span>
+            </div>
+            <div class="scoreDisplay" style="font-size: 14px;">
+                最高连击: <span class="number" id="maxCombo">0</span>
+            </div>
+            <button class="btn" onclick="restartGame()">再玩一次</button>
+            <button class="btn secondary" onclick="showStartScreen()" style="margin-top: 15px;">返回主页</button>
+        </div>
+        
+        <!-- 暂停界面 -->
+        <div id="pauseScreen" class="screen hidden">
+            <h1>PAUSED</h1>
+            <button class="btn" onclick="resumeGame()">继续游戏</button>
+            <button class="btn secondary" onclick="showStartScreen()" style="margin-top: 15px;">退出游戏</button>
+        </div>
+        
+        <!-- 游戏主界面 -->
+        <div id="topBar">
+            <div class="infoBox">
+                <div class="label">SCORE</div>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="infoBox">
+                <div class="label">COMBO</div>
+                <div class="value" id="comboDisplay">0</div>
+            </div>
+            <div class="infoBox">
+                <div class="label">LEVEL</div>
+                <div class="value" id="level">1</div>
+            </div>
+            <div class="infoBox">
+                <div class="label">LIVES</div>
+                <div id="lives">
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                </div>
+            </div>
+        </div>
+        
+        <button id="soundToggle" onclick="toggleSound()">🔊</button>
+        <button id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
+        <button id="pauseBtn" onclick="pauseGame()">⏸️</button>
+        
+        <div id="gameArea">
+            <div id="hint">
+                按 <span class="highlight">相反方向</span>！
+            </div>
+            
+            <div id="arrowDisplay">
+                <div class="arrow" id="currentArrow">⬆️</div>
+            </div>
+            
+            <div id="combo"></div>
+            
+            <div id="progressBar">
+                <div id="progressFill"></div>
+            </div>
+            
+            <div id="controls">
+                <div></div>
+                <div class="controlBtn" data-dir="up" onclick="handleInput('up')">⬆️</div>
+                <div></div>
+                <div class="controlBtn" data-dir="left" onclick="handleInput('left')">⬅️</div>
+                <div class="controlBtn" data-dir="down" onclick="handleInput('down')">⬇️</div>
+                <div class="controlBtn" data-dir="right" onclick="handleInput('right')">➡️</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 游戏状态
+        let gameState = {
+            isPlaying: false,
+            isPaused: false,
+            score: 0,
+            combo: 0,
+            maxCombo: 0,
+            level: 1,
+            lives: 3,
+            currentArrow: null,
+            timeLeft: 100,
+            timerInterval: null,
+            difficulty: 'easy',
+            soundEnabled: true
+        };
+        
+        // 难度配置
+        const difficulties = {
+            easy: { time: 3000, speed: 1 },
+            medium: { time: 2000, speed: 1.5 },
+            hard: { time: 1500, speed: 2 }
+        };
+        
+        // 箭头映射
+        const arrows = ['up', 'down', 'left', 'right'];
+        const arrowSymbols = {
+            up: '⬆️',
+            down: '⬇️',
+            left: '⬅️',
+            right: '➡️'
+        };
+        
+        // 相反方向
+        const opposite = {
+            up: 'down',
+            down: 'up',
+            left: 'right',
+            right: 'left'
+        };
+        
+        // 本地存储的排行榜
+        let leaderboard = JSON.parse(localStorage.getItem('reverseArrowLeaderboard')) || [];
+        
+        // 音效（使用 Web Audio API）
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 背景音乐系统
+        let bgmOscillator = null;
+        let bgmGainNode = null;
+        let bgmInterval = null;
+        let isPlayingBGM = false;
+        
+        // 马里奥风格的8-bit背景音乐
+        const bgmNotes = [
+            { freq: 262, duration: 0.15 }, { freq: 262, duration: 0.15 },
+            { freq: 0, duration: 0.15 }, { freq: 262, duration: 0.15 },
+            { freq: 0, duration: 0.15 }, { freq: 209, duration: 0.15 },
+            { freq: 262, duration: 0.15 }, { freq: 0, duration: 0.15 },
+            { freq: 311, duration: 0.15 }, { freq: 0, duration: 0.15 },
+            { freq: 0, duration: 0.45 },
+            { freq: 196, duration: 0.15 }, { freq: 196, duration: 0.15 },
+            { freq: 0, duration: 0.15 }, { freq: 196, duration: 0.15 },
+            { freq: 0, duration: 0.15 }, { freq: 165, duration: 0.15 },
+            { freq: 196, duration: 0.15 }, { freq: 0, duration: 0.15 },
+            { freq: 247, duration: 0.15 }, { freq: 0, duration: 0.15 },
+            { freq: 0, duration: 0.45 }
+        ];
+        
+        function startBGM() {
+            if (!gameState.soundEnabled || isPlayingBGM) return;
+            isPlayingBGM = true;
+            
+            let noteIndex = 0;
+            bgmInterval = setInterval(() => {
+                if (!gameState.soundEnabled || !isPlayingBGM) {
+                    stopBGM();
+                    return;
+                }
+                
+                const note = bgmNotes[noteIndex];
+                if (note && note.freq > 0) {
+                    playBGMNote(note.freq, note.duration);
+                }
+                
+                noteIndex = (noteIndex + 1) % bgmNotes.length;
+            }, 150);
+        }
+        
+        function stopBGM() {
+            isPlayingBGM = false;
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+            if (bgmOscillator) {
+                try {
+                    bgmOscillator.stop();
+                } catch(e) {}
+                bgmOscillator = null;
+            }
+        }
+        
+        function playBGMNote(freq, duration) {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            osc.type = 'square';
+            osc.frequency.value = freq;
+            
+            gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + duration);
+        }
+        
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            switch(type) {
+                case 'correct':
+                    oscillator.frequency.value = 600;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.value = 150;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'combo':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+                case 'levelUp':
+                    oscillator.frequency.value = 1000;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    break;
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLeaderboard();
+            setupDifficultyButtons();
+            setupKeyboardControls();
+        });
+        
+        // 难度选择
+        function setupDifficultyButtons() {
+            document.querySelectorAll('.difficultyBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.difficultyBtn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    gameState.difficulty = btn.dataset.diff;
+                });
+            });
+        }
+        
+        // 键盘控制
+        function setupKeyboardControls() {
+            document.addEventListener('keydown', (e) => {
+                if (!gameState.isPlaying || gameState.isPaused) return;
+                
+                switch(e.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        e.preventDefault();
+                        handleInput('up');
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        e.preventDefault();
+                        handleInput('down');
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        e.preventDefault();
+                        handleInput('left');
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        e.preventDefault();
+                        handleInput('right');
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        pauseGame();
+                        break;
+                }
+            });
+        }
+        
+        // 开始游戏
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            
+            gameState = {
+                isPlaying: true,
+                isPaused: false,
+                score: 0,
+                combo: 0,
+                maxCombo: 0,
+                level: 1,
+                lives: 3,
+                currentArrow: null,
+                timeLeft: 100,
+                timerInterval: null,
+                difficulty: gameState.difficulty,
+                soundEnabled: gameState.soundEnabled
+            };
+            
+            // 启动背景音乐
+            startBGM();
+            
+            updateUI();
+            nextRound();
+        }
+        
+        // 下一轮
+        function nextRound() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            // 随机选择箭头
+            gameState.currentArrow = arrows[Math.floor(Math.random() * arrows.length)];
+            
+            // 显示箭头
+            const arrowDisplay = document.getElementById('arrowDisplay');
+            arrowDisplay.classList.remove('correct', 'wrong');
+            arrowDisplay.classList.remove('difficulty-effect-easy', 'difficulty-effect-medium', 'difficulty-effect-hard');
+            
+            // 根据难度添加特效
+            if (gameState.difficulty === 'medium') {
+                arrowDisplay.classList.add('difficulty-effect-medium');
+            } else if (gameState.difficulty === 'hard') {
+                arrowDisplay.classList.add('difficulty-effect-hard');
+            } else {
+                arrowDisplay.classList.add('difficulty-effect-easy');
+            }
+            
+            document.getElementById('currentArrow').textContent = arrowSymbols[gameState.currentArrow];
+            
+            // 重置进度条
+            gameState.timeLeft = 100;
+            updateProgressBar();
+            
+            // 清除旧定时器
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            
+            // 启动倒计时
+            const timeLimit = difficulties[gameState.difficulty].time;
+            const updateInterval = 50;
+            const decrement = (100 * updateInterval) / timeLimit;
+            
+            gameState.timerInterval = setInterval(() => {
+                if (gameState.isPaused) return;
+                
+                gameState.timeLeft -= decrement;
+                updateProgressBar();
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    handleTimeout();
+                }
+            }, updateInterval);
+        }
+        
+        // 处理输入
+        function handleInput(direction) {
+            if (!gameState.isPlaying || gameState.isPaused || !gameState.currentArrow) return;
+            
+            clearInterval(gameState.timerInterval);
+            
+            const arrowDisplay = document.getElementById('arrowDisplay');
+            const btn = document.querySelector(`.controlBtn[data-dir="${direction}"]`);
+            
+            // 检查是否正确（按相反方向）
+            if (direction === opposite[gameState.currentArrow]) {
+                // 正确！
+                handleCorrect(btn);
+            } else {
+                // 错误！
+                handleWrong(btn);
+            }
+        }
+        
+        // 处理正确
+        function handleCorrect(btn) {
+            gameState.combo++;
+            if (gameState.combo > gameState.maxCombo) {
+                gameState.maxCombo = gameState.combo;
+            }
+            
+            // 计算得分（连击加成）
+            const baseScore = 10;
+            const comboBonus = Math.min(gameState.combo * 2, 50);
+            const timeBonus = Math.floor(gameState.timeLeft / 10);
+            gameState.score += baseScore + comboBonus + timeBonus;
+            
+            // 升级检查
+            if (gameState.score > gameState.level * 200) {
+                gameState.level++;
+                playSound('levelUp');
+                showCombo('LEVEL UP!');
+            } else {
+                playSound('correct');
+                if (gameState.combo >= 5) {
+                    playSound('combo');
+                    showCombo(`${gameState.combo} COMBO!`);
+                }
+            }
+            
+            // 视觉反馈
+            document.getElementById('arrowDisplay').classList.add('correct');
+            btn.classList.add('correct');
+            
+            // 根据难度添加按钮特效
+            const controls = document.getElementById('controls');
+            controls.classList.remove('btn-effect-medium', 'btn-effect-hard');
+            if (gameState.difficulty === 'medium') {
+                controls.classList.add('btn-effect-medium');
+            } else if (gameState.difficulty === 'hard') {
+                controls.classList.add('btn-effect-hard');
+            }
+            
+            setTimeout(() => {
+                btn.classList.remove('correct');
+                controls.classList.remove('btn-effect-medium', 'btn-effect-hard');
+            }, 300);
+            
+            // 创建粒子效果
+            createParticles(btn);
+            
+            updateUI();
+            
+            // 延迟后下一轮
+            setTimeout(() => {
+                if (gameState.isPlaying) {
+                    nextRound();
+                }
+            }, 300);
+        }
+        
+        // 处理错误
+        function handleWrong(btn) {
+            gameState.combo = 0;
+            gameState.lives--;
+            
+            playSound('wrong');
+            
+            // 视觉反馈
+            document.getElementById('arrowDisplay').classList.add('wrong');
+            btn.classList.add('wrong');
+            setTimeout(() => btn.classList.remove('wrong'), 400);
+            
+            updateUI();
+            
+            if (gameState.lives <= 0) {
+                setTimeout(() => gameOver(), 500);
+            } else {
+                setTimeout(() => {
+                    if (gameState.isPlaying) {
+                        nextRound();
+                    }
+                }, 500);
+            }
+        }
+        
+        // 处理超时
+        function handleTimeout() {
+            gameState.combo = 0;
+            gameState.lives--;
+            
+            playSound('wrong');
+            
+            document.getElementById('arrowDisplay').classList.add('wrong');
+            
+            updateUI();
+            
+            if (gameState.lives <= 0) {
+                setTimeout(() => gameOver(), 500);
+            } else {
+                setTimeout(() => {
+                    if (gameState.isPlaying) {
+                        nextRound();
+                    }
+                }, 500);
+            }
+        }
+        
+        // 显示连击
+        function showCombo(text) {
+            const comboEl = document.getElementById('combo');
+            comboEl.textContent = text;
+            comboEl.classList.remove('show');
+            void comboEl.offsetWidth; // 触发重排
+            comboEl.classList.add('show');
+        }
+        
+        // 创建粒子效果
+        function createParticles(element) {
+            const rect = element.getBoundingClientRect();
+            const colors = ['#ffd700', '#ff6b35', '#4ade80', '#fff'];
+            
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = rect.left + rect.width / 2 + 'px';
+                particle.style.top = rect.top + rect.height / 2 + 'px';
+                document.body.appendChild(particle);
+                
+                const angle = (i / 8) * Math.PI * 2;
+                const velocity = 100 + Math.random() * 50;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+                
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${vx}px, ${vy}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 600,
+                    easing: 'ease-out'
+                }).onfinish = () => particle.remove();
+            }
+        }
+        
+        // 更新UI
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('comboDisplay').textContent = gameState.combo;
+            document.getElementById('level').textContent = gameState.level;
+            
+            // 更新生命
+            const livesEl = document.getElementById('lives');
+            livesEl.innerHTML = '';
+            for (let i = 0; i < gameState.lives; i++) {
+                livesEl.innerHTML += '<span class="heart">❤️</span>';
+            }
+            for (let i = gameState.lives; i < 3; i++) {
+                livesEl.innerHTML += '<span class="heart" style="opacity:0.3;">🖤</span>';
+            }
+        }
+        
+        // 更新进度条
+        function updateProgressBar() {
+            document.getElementById('progressFill').style.width = Math.max(0, gameState.timeLeft) + '%';
+        }
+        
+        // 暂停游戏
+        function pauseGame() {
+            if (!gameState.isPlaying) return;
+            gameState.isPaused = true;
+            stopBGM();
+            document.getElementById('pauseScreen').classList.remove('hidden');
+        }
+        
+        // 继续游戏
+        function resumeGame() {
+            gameState.isPaused = false;
+            document.getElementById('pauseScreen').classList.add('hidden');
+            startBGM();
+        }
+        
+        // 游戏结束
+        function gameOver() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timerInterval);
+            
+            // 停止背景音乐
+            stopBGM();
+            
+            // 保存分数
+            saveScore(gameState.score, gameState.maxCombo);
+            
+            // 显示结果
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('maxCombo').textContent = gameState.maxCombo;
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+        }
+        
+        // 重新开始
+        function restartGame() {
+            startGame();
+        }
+        
+        // 返回主页
+        function showStartScreen() {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            clearInterval(gameState.timerInterval);
+            
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('pauseScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            
+            updateLeaderboard();
+        }
+        
+        // 保存分数
+        function saveScore(score, maxCombo) {
+            const playerName = '玩家' + Math.floor(Math.random() * 1000);
+            leaderboard.push({
+                name: playerName,
+                score: score,
+                maxCombo: maxCombo,
+                date: new Date().toLocaleDateString()
+            });
+            
+            // 排序并保留前10
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            
+            localStorage.setItem('reverseArrowLeaderboard', JSON.stringify(leaderboard));
+        }
+        
+        // 更新排行榜显示
+        function updateLeaderboard() {
+            const listEl = document.getElementById('leaderboardList');
+            listEl.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                listEl.innerHTML = '<div class="leaderboardItem"><span style="color:#888;">暂无记录</span></div>';
+                return;
+            }
+            
+            leaderboard.slice(0, 5).forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'leaderboardItem';
+                div.innerHTML = `
+                    <span class="rank">${index + 1}</span>
+                    <span class="name">${item.name}</span>
+                    <span class="score">${item.score}</span>
+                `;
+                listEl.appendChild(div);
+            });
+        }
+        
+        // 音效开关
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            document.getElementById('soundToggle').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+            
+            if (gameState.soundEnabled && gameState.isPlaying && !gameState.isPaused) {
+                startBGM();
+            } else if (!gameState.soundEnabled) {
+                stopBGM();
+            }
+        }
+        
+        // 全屏切换
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('全屏模式不支持:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // 监听全屏变化
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                document.body.classList.add('fullscreen');
+            } else {
+                document.body.classList.remove('fullscreen');
+            }
+        });
+        
+        // 防止页面滚动
+        document.addEventListener('touchmove', (e) => {
+            if (gameState.isPlaying) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // 防止双击缩放
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
